@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#12335b" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>差勤智慧小助手</title>
+  <style>
+    :root { --navy:#12335b; --blue:#1672b9; --sky:#e7f5ff; --pale:#f4f9fd; --line:#d9e6f1; --ink:#152334; --muted:#64778a; --warning:#fff8eb; --gold:#edb95b; }
+    * { box-sizing:border-box; }
+    body { min-height:100vh; margin:0; background:radial-gradient(circle at 8% 4%, #d8efff 0, transparent 25rem), radial-gradient(circle at 94% 14%, #e7f7f2 0, transparent 22rem), #f6f9fc; color:var(--ink); font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif; }
+    main { width:min(920px, calc(100% - 32px)); margin:0 auto; padding:56px 0 34px; }
+    header { position:relative; overflow:hidden; padding:30px 34px; margin-bottom:22px; border-radius:22px; color:#fff; background:linear-gradient(125deg, #0d315c, #176fae); box-shadow:0 18px 38px rgba(24,76,119,.2); }
+    header::after { content:""; position:absolute; right:-54px; top:-82px; width:220px; height:220px; border:28px solid rgba(255,255,255,.1); border-radius:50%; }
+    header::before { content:""; position:absolute; right:112px; bottom:-70px; width:135px; height:135px; border-radius:50%; background:rgba(231,245,255,.1); }
+    h1 { position:relative; z-index:1; margin:0 0 8px; font-size:clamp(1.8rem,4vw,2.5rem); letter-spacing:.06em; }
+    header p { position:relative; z-index:1; margin:0; color:rgba(255,255,255,.86); font-size:1.02rem; }
+    .panel { position:relative; background:rgba(255,255,255,.94); border:1px solid rgba(215,229,241,.9); border-radius:22px; padding:30px; box-shadow:0 15px 35px rgba(31,75,109,.1); }
+    .role-label, label { display:block; color:var(--navy); font-weight:700; letter-spacing:.025em; margin-bottom:11px; }
+    .role-label::before { content:"01"; display:inline-grid; place-items:center; width:25px; height:25px; margin-right:8px; border-radius:50%; color:#fff; background:var(--blue); font-size:.72rem; letter-spacing:0; }
+    .roles { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-bottom:27px; }
+    .role { min-height:55px; border:1px solid var(--line); background:#fff; border-radius:13px; padding:12px 16px; cursor:pointer; font:inherit; font-weight:700; color:var(--navy); transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+    .role:hover { transform:translateY(-2px); box-shadow:0 7px 14px rgba(29,91,141,.11); }
+    .role[aria-pressed="true"] { background:linear-gradient(135deg, #143a66, #1b77b8); color:#fff; border-color:#1b77b8; box-shadow:0 8px 16px rgba(25,103,165,.2); }
+    textarea { width:100%; min-height:118px; resize:vertical; border:1px solid #c9dbe9; border-radius:13px; padding:15px; font:inherit; line-height:1.6; color:var(--ink); background:#fcfeff; transition:border .18s ease, box-shadow .18s ease; }
+    textarea::placeholder { color:#94a5b5; }
+    textarea:focus { outline:0; border-color:var(--blue); box-shadow:0 0 0 4px rgba(22,114,185,.12); }
+    .actions { display:flex; gap:14px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+    button { font:inherit; }
+    .ask { border:0; border-radius:11px; padding:12px 21px; color:#fff; background:linear-gradient(135deg, #126db1, #155c9c); box-shadow:0 9px 15px rgba(20,97,160,.2); font-weight:700; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease; }
+    .ask:hover { transform:translateY(-2px); box-shadow:0 12px 20px rgba(20,97,160,.28); }
+    .ask:active { transform:translateY(0); }
+    .hint { flex:1; min-width:230px; color:var(--muted); font-size:.88rem; line-height:1.6; }
+    .quick { margin:30px 0 0; padding-top:23px; border-top:1px solid var(--line); }
+    .quick p { margin:0 0 11px; color:var(--navy); font-weight:700; }
+    .quick p::before { content:"常用"; margin-right:8px; border-radius:999px; padding:3px 8px; color:#16639e; background:#e4f3ff; font-size:.75rem; }
+    .chips { display:flex; gap:9px; flex-wrap:wrap; }
+    .chip { border:1px solid #cfe3f1; background:var(--pale); color:#28506d; border-radius:999px; padding:8px 13px; cursor:pointer; transition:background .18s ease, transform .18s ease, border .18s ease; }
+    .chip:hover { transform:translateY(-1px); border-color:#9fc8e4; background:var(--sky); color:#0e548b; }
+    #answer { margin-top:25px; }
+    .answer-card { position:relative; overflow:hidden; border:1px solid #cde5f5; border-left:5px solid var(--blue); background:linear-gradient(110deg, #f5fbff, #fcfeff); padding:20px 21px; border-radius:0 14px 14px 0; box-shadow:0 8px 19px rgba(29,91,141,.08); }
+    .answer-card::after { content:""; position:absolute; top:-20px; right:-20px; width:84px; height:84px; border-radius:50%; background:rgba(22,114,185,.06); }
+    .answer-card.fallback { border-color:#f0dfb8; border-left-color:#c68a23; background:var(--warning); }
+    .answer-card h2 { position:relative; margin:0 0 10px; color:var(--navy); font-size:1.1rem; }
+    .answer-card p { position:relative; margin:0; line-height:1.85; white-space:pre-line; }
+    .source { margin-top:14px !important; padding-top:12px; border-top:1px dashed #c8dce9; color:#416279; font-size:.92rem; }
+    footer { margin:20px 0 8px; color:var(--muted); font-size:.85rem; line-height:1.6; text-align:center; }
+    .install { display:none; margin-left:auto; border:1px solid rgba(255,255,255,.65); border-radius:999px; padding:7px 12px; color:#fff; background:rgba(255,255,255,.12); cursor:pointer; font:inherit; font-size:.88rem; }
+    .install:hover { background:rgba(255,255,255,.22); }
+    .install.visible { display:inline-block; }
+    @media (max-width:560px) { main { width:min(100% - 20px,920px); padding-top:20px; } header { padding:25px 22px; border-radius:18px; } .panel { padding:20px; border-radius:18px; } .roles { grid-template-columns:1fr; } .actions { align-items:stretch; } .ask { width:100%; } .hint { min-width:0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>差勤智慧小助手</h1>
+      <p>依身分類別查詢請假規定，回答均附規則出處。</p>
+      <button class="install" id="install" type="button">安裝小程式</button>
+    </header>
+    <section class="panel" aria-label="請假規定問答">
+      <span class="role-label">請選擇身分</span>
+      <div class="roles" role="group" aria-label="身分類別">
+        <button class="role" type="button" data-role="civil" aria-pressed="true">公務人員</button>
+        <button class="role" type="button" data-role="teacher" aria-pressed="false">教師</button>
+      </div>
+      <label for="question">請輸入您的問題</label>
+      <textarea id="question" placeholder="例如：婚假有幾天？要在何時請完？"></textarea>
+      <div class="actions">
+        <button class="ask" type="button" id="ask">取得解答</button>
+        <span class="hint">可詢問事假、病假、婚假、產假、喪假、休假或請假程序</span>
+      </div>
+      <div class="quick">
+        <p>常見問題</p>
+        <div class="chips">
+          <button class="chip" type="button">事假有幾天？</button>
+          <button class="chip" type="button">婚假要在何時請完？</button>
+          <button class="chip" type="button">病假超過 28 天怎麼辦？</button>
+          <button class="chip" type="button">喪假有幾天？</button>
+          <button class="chip" type="button">請兩天病假要證明嗎？</button>
+        </div>
+      </div>
+      <div id="answer" aria-live="polite"></div>
+    </section>
+    <footer>本工具為規則查詢輔助，實際核定仍依服務機關／學校及個案情形辦理。</footer>
+  </main>
+  <script>
+    let role = 'civil';
+    const question = document.getElementById('question');
+    const answer = document.getElementById('answer');
+    const sourceName = () => role === 'civil' ? '公務人員請假規則' : '教師請假規則';
+    const cite = (article) => `本答案出處：${sourceName()}第${article}條。`;
+    const data = {
+      common: [
+        { keys:['事假','家庭照顧','身心調適'], text:() => role==='civil' ? '事假每年 7 日；家庭照顧假每年 7 日、身心調適假每年 3 日，兩者均併入事假計算。家庭照顧假及身心調適假即使併入事假計算，仍不受「超過事假前須先請畢休假及補休」的限制。' : '事假每學年 7 日；家庭照顧假每學年 7 日、身心調適假每學年 3 日，兩者均併入事假計算。三者合計超過 7 日時，應按日扣薪；所遺課務代理費由學校支付。', art:'3' },
+        { keys:['病假','28天','二十八'], text:() => role==='civil' ? '病假每年 28 日；超過時以事假抵銷。重大傷病或安胎確有需要者，病假、事假、休假及補休請畢後，經機關長官核准可請延長病假，兩年內合計最長 1 年。' : '病假每學年 28 日；超過時以事假抵銷。重病或安胎確有需要者，病假、事假及休假請畢後，經學校核准可請延長病假，兩年內合計最長 1 年。', art:'3' },
+        { keys:['生理假'], text:() => '因生理日致工作困難，每月可請生理假 1 日；全年／全學年未超過 3 日者，不併入病假，超過的日數併入病假計算。', art:'3' },
+        { keys:['婚假','結婚'], text:() => role==='civil' ? '婚假為 14 日，原則上應自結婚日前 10 日起 3 個月內請畢；有特殊事由並經機關長官核准者，可於 1 年內請畢。' : '婚假為 14 日，應自結婚登記日前 10 日起 3 個月內請畢；有特殊事由並經學校核准者，可於 1 年內請畢。', art:'3' },
+        { keys:['產前','娩假','產假','流產'], text:() => role==='civil' ? '產前假 8 日，可分次申請且不得保留至分娩後；娩假 42 日。流產假依懷孕週數為：滿 20 週 42 日、12 週以上未滿 20 週 21 日、未滿 12 週 14 日。娩假與流產假應一次請畢。' : '產前假 8 日，可分次申請且不得保留至分娩後；娩假 42 日。流產假依懷孕週數為：滿 20 週 42 日、12 週以上未滿 20 週 21 日、未滿 12 週 14 日。娩假與流產假應一次請畢，且不得扣除寒暑假日數。', art:'3' },
+        { keys:['陪產','產檢','陪產檢'], text:() => '陪產檢及陪產假共 7 日，可分次申請。陪產檢應於配偶懷孕期間請；陪產應於配偶分娩或懷孕滿 20 週以上流產當日及前後合計 15 日（包括例假日）內請。', art:'3' },
+        { keys:['喪假','死亡','過世'], text:() => '父母、配偶死亡：15 日；繼父母、配偶父母、子女死亡：10 日；曾祖父母、祖父母、配偶祖父母、配偶繼父母、兄弟姊妹死亡：5 日。喪假可分次申請，並應於死亡日起 100 日內請畢。', art:'3' },
+        { keys:['捐贈','骨髓','器官'], text:() => '捐贈骨髓或器官者，視實際需要給假。', art:'3' },
+        { keys:['公假','傳染病','投票','兵役'], text:() => '符合規則列舉的公假事由（例如奉派集會、兵役召集、政府主辦投票、法定傳染病配合檢查或隔離等），可給予公假；期間由機關或學校依實際需要定之。個案是否符合事由，仍由權責單位核定。', art:'4' },
+        { keys:['休假','特休','年資'], text:() => role==='civil' ? '連續服務滿 1 年後，次年起每年休假 7 日；滿 3、6、9、14 年，分別為 14、21、28、30 日。初任或年資銜接等情形另有比例及採計規定。' : '公立中小學兼任行政職務教師，服務滿 1 學年後，次學年起每學年休假 7 日；滿 3、6、9、14 學年，分別為 14、21、28、30 日。私立學校及公立專科以上學校兼任行政教師，由各校自行定之。', art: role==='civil'?'7':'8' },
+        { keys:['證明','診斷','兩天','二日','病假要'], text:() => role==='civil' ? '申請 2 日以上病假、娩假、流產假、陪產檢及陪產假、骨髓或器官捐贈假，應檢具合法醫療機構或醫師證明書或其他證明文件。延長病假或因公傷病公假 7 日以上，須檢具評鑑合格醫院診斷證明。' : '申請 2 日以上病假、娩假、流產假、陪產檢及陪產假、骨髓或器官捐贈假，應檢具合法醫療機構證明書或其他證明文件。延長病假或因公傷病公假 7 日以上，須檢具評鑑合格醫院診斷證明。', art: role==='civil'?'11':'13' },
+        { keys:['程序','假單','急病','緊急'], text:() => role==='civil' ? '請假原則上須填具假單，經機關長官核准後才能離開任所；急病或緊急事故時，可由同事、家屬或親友代辦或補辦。' : '請假原則上須填具假單，經學校核准後才能離開；急病或緊急事故時，可由同事或親友代辦或補辦。', art: role==='civil'?'11':'13' },
+        { keys:['曠職','未請假','假期滿'], text:() => role==='civil' ? '未辦請假手續擅離職守、假期已滿未銷假，或請假有虛偽情事，均以曠職論。' : '未依規定請假而擅離職守、假期已滿未銷假，或請假有虛偽情事，均以曠職論；無故缺課者以曠課論，並扣除相應薪給。', art: role==='civil'?'13':'15' }
+      ]
+    };
+    function show(text, article, fallback=false) {
+      answer.innerHTML = `<article class="answer-card${fallback?' fallback':''}"><h2>${fallback?'需要進一步確認':'查詢結果'}</h2><p>${text}</p>${article?`<p class="source">${cite(article)}</p>`:''}</article>`;
+    }
+    function findAnswer() {
+      const q = question.value.trim();
+      if (!q) { show('請先輸入您想查詢的請假問題。', '', true); return; }
+      const found = data.common.find(item => item.keys.some(key => q.includes(key)));
+      if (found) show(found.text(), found.art);
+      else show('抱歉，目前無法依所提供的規則精確回答此問題，請逕洽人事單位獲得更好的回答。', '', true);
+    }
+    document.querySelectorAll('.role').forEach(btn => btn.addEventListener('click', () => {
+      role = btn.dataset.role;
+      document.querySelectorAll('.role').forEach(b => b.setAttribute('aria-pressed', String(b===btn)));
+      if (answer.innerHTML) findAnswer();
+    }));
+    document.getElementById('ask').addEventListener('click', findAnswer);
+    question.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') findAnswer(); });
+    document.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => { question.value = chip.textContent; findAnswer(); }));
+    let deferredInstall;
+    const installButton = document.getElementById('install');
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredInstall = event;
+      installButton.classList.add('visible');
+    });
+    installButton.addEventListener('click', async () => {
+      if (!deferredInstall) return;
+      deferredInstall.prompt();
+      await deferredInstall.userChoice;
+      deferredInstall = null;
+      installButton.classList.remove('visible');
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
+</body>
+</html>
